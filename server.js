@@ -41,8 +41,20 @@ const resolvers = {
 		}
 	},
 	Subscription: {
-		// Subscription types
+		newPost: {
+			subscribe: () => pubsub.asyncIterator('NEW_POST')
+		}
 	}
 }
 
 }
+
+const server = new ApolloServer({ 
+	typeDefs, 
+	resolvers 
+});
+
+// The `listen` method launches a web server.
+server.listen().then(({ url }) => {
+	console.log(`🚀 Server ready at ${url}`);
+});
