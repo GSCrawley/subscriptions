@@ -32,8 +32,7 @@ const resolvers = {
 		}
 	},
 	Mutation: {
-        addPost: (parent, args, context, info) => {
-            (_, { message }) => {
+        addPost: (_, { message }) => {
 			const post = { message, date: new Date() }
 			data.push(post)
 			pubsub.publish('NEW_POST', { newPost: post }) // Publish!
@@ -45,8 +44,6 @@ const resolvers = {
 			subscribe: () => pubsub.asyncIterator('NEW_POST')
 		}
 	}
-}
-
 }
 
 const server = new ApolloServer({ 
