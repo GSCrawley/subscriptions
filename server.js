@@ -29,9 +29,10 @@ const typeDefs = gql`
 	}
 `
 
-const data = [
-	{ message: 'hello world', date: new Date() }
-]
+const data = {
+	Main: [ { message: 'Tnis is my main message, the obvious straightforward meaning of the words you hear coming out of my mouth', date: new Date() } ],
+	Subtext: [ { message: 'This is the underlying subtext of my message, the hidden message hidden behind my message, that odds are you probably arent smart enough to be able to figure out', date: new Date() }]
+}
 
 const resolvers = {
 	Query: {
