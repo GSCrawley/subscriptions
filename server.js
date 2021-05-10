@@ -2,6 +2,16 @@ const { ApolloServer, gql, PubSub } = require('apollo-server');
 
 const pubsub = new PubSub();
 
+const channels = [ {
+	name: 'Main', posts: [ 
+		{ message: 'Tnis is my main message, the obvious straightforward meaning of the words you hear coming out of my mouth', date: new Date() } ] },
+	{
+	name: 'Subtext', posts: [ 
+		{ message: 'This is the underlying subtext of my message, the hidden message hidden behind my message, that odds are you probably arent smart enough to be able to figure out', date: new Date() },
+	]
+},
+]
+
 const typeDefs = gql`
 	type Post {
 		message: String!
@@ -24,44 +34,69 @@ const typeDefs = gql`
 	}
 
 	type Subscription {
-		newPost(channel: String!, message: String!): Post
-		newChanel: Channel!
+		newPost(channel: String!): Post
+		newChannel: Channel!
 	}
 `
 
-const data = {
-	Main: [ { message: 'Tnis is my main message, the obvious straightforward meaning of the words you hear coming out of my mouth', date: new Date() } ],
-	Subtext: [ { message: 'This is the underlying subtext of my message, the hidden message hidden behind my message, that odds are you probably arent smart enough to be able to figure out', date: new Date() }]
-}
-
 const resolvers = {
-	Query: {
-        posts: (_, { channel }) => data[channel],
-        channels: () => {
-            const keys = Object.keys(data)
-            return keys.map(name => ({ name, posts: data[name] }))
+	Post: {
+        message: (parent) => {
+          return parent.message
+        },
+        date: (parent) => {
+          return new Date(parent.date).toLocaleDateString()
+        }
+      },
+	  Channel: {
+        name: (parent) => {
+          return parent.name
+        },
+        posts: (parent) => {
+          return parent.posts
+        }
+      },
+	  Query: {
+		  posts: (_, { channel }) => { 
+			  return channels.filter(e => e.name === channel)[0].posts 
+         },
+        channels: () => { 
+            return channels
         }
     },
 	Mutation: {
-        addPost: (_, { channel, message }) => {
+        addPost: (_, { channel, message  }) => {
             const post = { message, date: new Date() }
-            data.push(post)
-            pubsub.publish('NEW_POST', { newPost: post }) // Publish!
+            const foundChannel = channels.find(i => i.name === channel)
+			if (foundChannel === undefined){
+                return null
+            } 
+			foundChannel.posts.push(post)
+            pubsub.publish('NEW_POST', { newPost: post })
             return post
-        },
+         },
 		addChannel: (_, { name }) => {
-            const channel = { name }
-            data.push(channel)
-            pubsub.publish('New_Channel', { newChannel: channel })
+            const channel = { 
+				name, 
+				posts: []
+			}
+            pubsub.publish('NEW_Channel', { newChannel: channel })
             return channel
         }
     },
 	Subscription: {
-		newPost: {
-			subscribe: () => pubsub.asyncIterator('NEW_POST')
-		}
+        newPost: {
+            subscribe: () => {
+                pubsub.asyncIterator('NEW_POST')
+            }
+        },
+        newChannel: {
+            subscribe: () => pubsub.asyncIterator('NEW_Channel')
+            }
+        }
 	}
-};
+
+
 
 const server = new ApolloServer({ 
 	typeDefs, 
