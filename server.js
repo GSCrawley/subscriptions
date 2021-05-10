@@ -36,18 +36,26 @@ const data = {
 
 const resolvers = {
 	Query: {
-		posts: () => {
-			return data
-		}
-	},
+        posts: (_, { channel }) => data[channel],
+        channels: () => {
+            const keys = Object.keys(data)
+            return keys.map(name => ({ name, posts: data[name] }))
+        }
+    },
 	Mutation: {
-        addPost: (_, { message }) => {
-			const post = { message, date: new Date() }
-			data.push(post)
-			pubsub.publish('NEW_POST', { newPost: post }) // Publish!
-			return post
-		}
-	},
+        addPost: (_, { channel, message }) => {
+            const post = { message, date: new Date() }
+            data.push(post)
+            pubsub.publish('NEW_POST', { newPost: post }) // Publish!
+            return post
+        },
+		addChannel: (_, { name }) => {
+            const channel = { name }
+            data.push(channel)
+            pubsub.publish('New_Channel', { newChannel: channel })
+            return channel
+        }
+    },
 	Subscription: {
 		newPost: {
 			subscribe: () => pubsub.asyncIterator('NEW_POST')
