@@ -2,11 +2,10 @@ const { ApolloServer, gql, PubSub } = require('apollo-server');
 
 const pubsub = new PubSub();
 
-const channels = [ {
-	name: 'Main', posts: [ 
-		{ message: 'Tnis is my main message, the obvious straightforward meaning of the words you hear coming out of my mouth', date: new Date() } ] },
-	{
-	name: 'Subtext', posts: [ 
+const data = [ {
+	Main: [ 
+		{ message: 'Tnis is my main message, the obvious straightforward meaning of the words you hear coming out of my mouth', date: new Date() } ],
+	Subtext: [ 
 		{ message: 'This is the underlying subtext of my message, the hidden message hidden behind my message, that odds are you probably arent smart enough to be able to figure out', date: new Date() },
 	]
 },
@@ -20,15 +19,15 @@ const typeDefs = gql`
 
 	type Channel {
         name: String!
-        posts: [Post!]
+        posts: [Post]
     }
 
 	type Query {
-		posts(channel: String!): [Post!]
-        channels: [Channel!]!
+		posts(channel: String!): [Post!]!
+        channel: [Channel!]!
 	}
 
-	type Mutation {
+    type Mutation {
 		addPost(channel: String!, message: String!): Post
 		addChannel(name: String!): Channel
 	}
@@ -54,20 +53,22 @@ const resolvers = {
         },
         posts: (parent) => {
           return parent.posts
-        }
+        } 
       },
 	  Query: {
 		  posts: (_, { channel }) => { 
-			  return channels.filter(e => e.name === channel)[0].posts 
+			  return channel.filter(e => e.name === channel)[0].posts 
          },
-        channels: () => { 
-            return channels
+        channel: () => { 
+            return channel
         }
     },
 	Mutation: {
         addPost: (_, { channel, message  }) => {
+			            // console.log(message, channel)
             const post = { message, date: new Date() }
             const foundChannel = channels.find(i => i.name === channel)
+			console.log(foundChannel)
 			if (foundChannel === undefined){
                 return null
             } 
